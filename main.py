@@ -79,20 +79,16 @@ def main():
     X_all = np.column_stack([stock_ids, dates_scaled])
     y_all = prices
 
-    X_train, X_val, y_train, y_val = train_test_split(
-        X_all, y_all, test_size=0.2, random_state=42
-    )
-
     model = StockPricePredictor(num_stocks=len(stock_to_idx))
-    optimizer = optim.Adam(model.parameters(), lr=0.1)
+    optimizer = optim.Adam(model.parameters(), lr=0.001)
     criterion = nn.MSELoss()
 
-    train_losses, val_losses = [], []
+    train_losses = []
     for epoch in range(epochs):
         model.train()
-        for i in range(0, len(X_train), batch_size):
-            batch_X = X_train[i : i + batch_size]
-            batch_y = y_train[i : i + batch_size]
+        for i in range(0, len(X_all), batch_size):
+            batch_X = X_all[i : i + batch_size]
+            batch_y = y_all[i : i + batch_size]
             stock_ids = torch.tensor(batch_X[:, 0], dtype=torch.long)
             dates = torch.tensor(batch_X[:, 1], dtype=torch.float32)
             batch_y = torch.tensor(batch_y, dtype=torch.float32)
@@ -103,16 +99,9 @@ def main():
             optimizer.step()
         # Validation
         model.eval()
-        with torch.no_grad():
-            stock_ids = torch.tensor(X_val[:, 0], dtype=torch.long)
-            dates = torch.tensor(X_val[:, 1], dtype=torch.float32)
-            val_y_tensor = torch.tensor(y_val, dtype=torch.float32)
-            val_preds = model(stock_ids, dates)
-            val_loss = criterion(val_preds, val_y_tensor)
         train_losses.append(loss.item())
-        val_losses.append(val_loss.item())
         print(
-            f"Epoch {epoch+1}: Train Loss={loss.item():.4f}, Val Loss={val_loss.item():.4f}"
+            f"Epoch {epoch+1}: Train Loss={loss.item():.4f}"
         )
 
     # Plot predictions vs real prices for all tickers
