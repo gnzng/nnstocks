@@ -73,7 +73,7 @@ def main():
     symbols = ["AAPL", "MSFT", "GOOG"]
     start = "2010-01-01"
     end = "2020-01-01"
-    epochs = 10
+    epochs = 100
     batch_size = 64
 
     # Fetch data
