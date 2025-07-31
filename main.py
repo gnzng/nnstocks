@@ -4,6 +4,7 @@ import torch.optim as optim
 import numpy as np
 import yfinance as yf
 from sklearn.preprocessing import StandardScaler
+import os
 import matplotlib.pyplot as plt
 
 
@@ -41,6 +42,7 @@ def fetch_data(symbols, start, end):
 
     for i, symbol in enumerate(symbols):
         data = yf.download(symbol, start=start, end=end, progress=False, auto_adjust=False)
+        print(f'fetched data {symbol}')
         if len(data) == 0:
             continue
 
@@ -70,10 +72,10 @@ def fetch_data(symbols, start, end):
 
 
 def main():
-    symbols = ["AAPL", "MSFT", "GOOG"]
+    symbols = ["AAPL", "MSFT", "GOOG", "MCD", "NFLX", "WMT", "JPM", "COST", "IBM", "DIS"]
     start = "2010-01-01"
     end = "2020-01-01"
-    epochs = 100
+    epochs = 1000
     batch_size = 64
 
     # Fetch data
@@ -101,7 +103,7 @@ def main():
     model.train()
 
     for epoch in range(epochs):
-        # Shuffle data
+        # Shuffle stocks, dates and prices using torch randperm
         perm = torch.randperm(len(stock_ids_tensor))
         stock_ids_shuffled = stock_ids_tensor[perm]
         dates_shuffled = dates_tensor[perm]
@@ -135,7 +137,7 @@ def main():
     plt.figure(figsize=(15, 5))
 
     for i, symbol in enumerate(symbols):
-        plt.subplot(1, 3, i + 1)
+        plt.subplot(2, len(symbols)//2, i + 1)
 
         # Get data for this stock
         mask = stock_ids == i
@@ -157,7 +159,7 @@ def main():
         plt.plot(stock_dates, preds, label="Predicted", alpha=0.7)
         plt.xlabel("Days since start")
         plt.ylabel("Price ($)")
-        plt.title(f"{symbol} - Actual vs Predicted")
+        plt.title(f"{symbol}")
         plt.legend()
         plt.grid(True, alpha=0.3)
 
@@ -172,6 +174,21 @@ def main():
     plt.title("Training Loss")
     plt.grid(True, alpha=0.3)
     plt.show()
+
+    # Calculate model size in bytes
+    model_path = "stock_model.pt"
+    torch.save(model.state_dict(), model_path)
+    model_size = os.path.getsize(model_path)
+
+    # Calculate raw data size in bytes
+    raw_data = np.column_stack([stock_ids, dates, prices])
+    raw_data_size = raw_data.nbytes
+
+    print(f"Model size on disk: {model_size / 1024:.2f} KB")
+    print(f"Raw data size in memory: {raw_data_size / 1024:.2f} KB")
+
+    # Clean up saved model file
+    os.remove(model_path)
 
 
 if __name__ == "__main__":
