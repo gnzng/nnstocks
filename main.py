@@ -115,26 +115,23 @@ def main():
             f"Epoch {epoch+1}: Train Loss={loss.item():.4f}, Val Loss={val_loss.item():.4f}"
         )
 
-    # Plot predictions vs real prices for AAPL
-    aapl_idx = stock_to_idx["AAPL"]
-    aapl_dates = X[aapl_idx]
-    aapl_prices = y[aapl_idx]
-
-    # Normalize dates
-    aapl_dates_norm = scaler.transform(aapl_dates.reshape(-1, 1)).flatten()
-    stock_ids_tensor = torch.tensor([aapl_idx] * len(aapl_dates_norm), dtype=torch.long)
-    dates_tensor = torch.tensor(aapl_dates_norm, dtype=torch.float32)
-
-    model.eval()
-    with torch.no_grad():
-        preds = model(stock_ids_tensor, dates_tensor).squeeze(-1).numpy()
-
+    # Plot predictions vs real prices for all tickers
     plt.figure(figsize=(12, 6))
-    plt.plot(aapl_dates, aapl_prices, label="Actual Price")
-    plt.plot(aapl_dates, preds, label="Predicted Price")
+    for symbol in symbols:
+        idx = stock_to_idx[symbol]
+        dates = X[idx]
+        prices_actual = y[idx]
+        dates_norm = scaler.transform(dates.reshape(-1, 1)).flatten()
+        stock_ids_tensor = torch.tensor([idx] * len(dates_norm), dtype=torch.long)
+        dates_tensor = torch.tensor(dates_norm, dtype=torch.float32)
+        model.eval()
+        with torch.no_grad():
+            preds = model(stock_ids_tensor, dates_tensor).squeeze(-1).numpy()
+        plt.plot(dates, prices_actual, label=f"{symbol} Actual")
+        plt.plot(dates, preds, "--", label=f"{symbol} Predicted")
     plt.xlabel(f"Days since {start}")
     plt.ylabel("Price")
-    plt.title("AAPL: Actual vs Predicted Prices")
+    plt.title("Actual vs Predicted Prices for All Tickers")
     plt.legend()
     plt.show()
 
