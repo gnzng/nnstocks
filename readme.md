@@ -1,10 +1,10 @@
-# NNStocks
+# nnstocks
 
-NNStocks is a Python project for analyzing stock market trends using neural network compression. It showcases how a neural network can be used to store data efficiently but with less resolution.
+nnstock is a small prototyped project for storing stock market trends using neural network compression. It showcases how a neural network can be used to store data efficiently, but with less resolution.
 
 ## Example
 
-10 years of daily price data for different stocks from the S&P500:
+10 years (2010-2020) of daily price data for different stocks from the S&P500:
 
 ### Comparison and Storage
 
