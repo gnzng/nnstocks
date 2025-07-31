@@ -12,22 +12,15 @@ import pandas as pd
 
 
 class StockPricePredictor(nn.Module):
-    def __init__(self, num_stocks, embedding_dim=8, hidden_dim=32):
+    def __init__(self, num_stocks):
         super().__init__()
-        self.stock_embed = nn.Embedding(num_stocks, embedding_dim)
-        self.fc1 = nn.Linear(embedding_dim + 1, hidden_dim)
-        self.fc2 = nn.Linear(hidden_dim, 1)
+        self.fc = nn.Linear(2, 1)  # input: [stock_id, date]
 
     def forward(self, stock_ids, dates):
-        stock_embeds = self.stock_embed(stock_ids)
         if dates.dim() == 1:
             dates = dates.unsqueeze(1)
-        elif dates.dim() == 2 and dates.shape[1] != 1:
-            dates = dates[:, 0].unsqueeze(1)
-        x = torch.cat([stock_embeds, dates], dim=1)
-        x = F.relu(self.fc1(x))
-        price = self.fc2(x)
-        return price
+        x = torch.cat([stock_ids.float().unsqueeze(1), dates], dim=1)
+        return self.fc(x)
 
 
 def fetch_data(symbols, start, end):
