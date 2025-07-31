@@ -41,8 +41,10 @@ def fetch_data(symbols, start, end):
     all_data = []
 
     for i, symbol in enumerate(symbols):
-        data = yf.download(symbol, start=start, end=end, progress=False, auto_adjust=False)
-        print(f'fetched data {symbol}')
+        data = yf.download(
+            symbol, start=start, end=end, progress=False, auto_adjust=False
+        )
+        print(f"fetched data {symbol}")
         if len(data) == 0:
             continue
 
@@ -72,7 +74,18 @@ def fetch_data(symbols, start, end):
 
 
 def main():
-    symbols = ["AAPL", "MSFT", "GOOG", "MCD", "NFLX", "WMT", "JPM", "COST", "IBM", "DIS"]
+    symbols = [
+        "AAPL",
+        "MSFT",
+        "GOOG",
+        "MCD",
+        "NFLX",
+        "WMT",
+        "JPM",
+        "COST",
+        "IBM",
+        "DIS",
+    ]
     start = "2010-01-01"
     end = "2020-01-01"
     epochs = 1000
@@ -113,9 +126,9 @@ def main():
         num_batches = 0
 
         for i in range(0, len(stock_ids_tensor), batch_size):
-            batch_stocks = stock_ids_shuffled[i : i + batch_size]
-            batch_dates = dates_shuffled[i : i + batch_size]
-            batch_prices = prices_shuffled[i : i + batch_size]
+            batch_stocks = stock_ids_shuffled[i: i + batch_size]
+            batch_dates = dates_shuffled[i: i + batch_size]
+            batch_prices = prices_shuffled[i: i + batch_size]
 
             optimizer.zero_grad()
             preds = model(batch_stocks, batch_dates).squeeze(-1)
@@ -137,7 +150,7 @@ def main():
     plt.figure(figsize=(15, 5))
 
     for i, symbol in enumerate(symbols):
-        plt.subplot(2, len(symbols)//2, i + 1)
+        plt.subplot(2, len(symbols) // 2, i + 1)
 
         # Get data for this stock
         mask = stock_ids == i
@@ -162,6 +175,20 @@ def main():
         plt.title(f"{symbol}")
         plt.legend()
         plt.grid(True, alpha=0.3)
+
+        # Calculate prediction errors
+        actual = stock_prices
+        predicted = preds
+        abs_errors = np.abs(predicted - actual)
+        percent_errors = abs_errors / np.maximum(np.abs(actual), 1e-8) * 100
+
+        max_pct_error = np.max(percent_errors)
+        mean_pct_error = np.mean(percent_errors)
+        median_pct_error = np.median(percent_errors)
+
+        print(
+            f"{symbol}: Max % error={max_pct_error:.2f}, Mean % error={mean_pct_error:.2f}, Median % error={median_pct_error:.2f}"
+        )
 
     plt.tight_layout()
     plt.show()
