@@ -24,6 +24,8 @@ Raw data size in memory: 589.69 KB
 
 ![10 Stocks](static/10stocks.png)
 
+This means, using the simple linear model here, the whole S&P500 10 year price data could be stored about 300 times more efficient.
+
 ### Stats
 
 | Ticker | Max % Error | Mean % Error | Median % Error |

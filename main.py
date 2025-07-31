@@ -127,9 +127,9 @@ def main():
         num_batches = 0
 
         for i in range(0, len(stock_ids_tensor), batch_size):
-            batch_stocks = stock_ids_shuffled[i: i + batch_size]
-            batch_dates = dates_shuffled[i: i + batch_size]
-            batch_prices = prices_shuffled[i: i + batch_size]
+            batch_stocks = stock_ids_shuffled[i : i + batch_size]
+            batch_dates = dates_shuffled[i : i + batch_size]
+            batch_prices = prices_shuffled[i : i + batch_size]
 
             optimizer.zero_grad()
             preds = model(batch_stocks, batch_dates).squeeze(-1)
