@@ -5,6 +5,7 @@ import numpy as np
 import yfinance as yf
 from sklearn.preprocessing import StandardScaler
 import os
+import time
 import matplotlib.pyplot as plt
 
 
@@ -88,7 +89,7 @@ def main():
     ]
     start = "2010-01-01"
     end = "2020-01-01"
-    epochs = 1000
+    epochs = 10
     batch_size = 64
 
     # Fetch data
@@ -216,6 +217,33 @@ def main():
 
     # Clean up saved model file
     os.remove(model_path)
+
+    ####
+    # Timing
+    # Prepare lookup data for timing
+    lookup_stock_id = 0  # AAPL
+    lookup_date = dates[stock_ids == lookup_stock_id][10]  # Pick a date for AAPL
+
+    # Model prediction timing
+    model.eval()
+    with torch.no_grad():
+        stock_tensor = torch.tensor([lookup_stock_id], dtype=torch.long)
+        date_scaled = date_scaler.transform(np.array([[lookup_date]])).flatten()
+        date_tensor = torch.tensor(date_scaled, dtype=torch.float32)
+        start_model = time.time()
+        pred_scaled = model(stock_tensor, date_tensor).item()
+        price_scaler.inverse_transform([[pred_scaled]])[0, 0]
+        end_model = time.time()
+        model_time = end_model - start_model
+
+    # Raw data lookup timing
+    start_raw = time.time()
+    mask = (stock_ids == lookup_stock_id) & (dates == lookup_date)
+    end_raw = time.time()
+    raw_time = end_raw - start_raw
+
+    print(f"Model prediction time: {model_time * 1e6:.2f} µs")
+    print(f"Raw data lookup time: {raw_time * 1e6:.2f} µs")
 
 
 if __name__ == "__main__":
