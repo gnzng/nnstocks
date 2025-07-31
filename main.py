@@ -40,7 +40,8 @@ def fetch_data(symbols, start, end):
 
         # I already know which stock it is here so lets move away from stupid pandas
         # Convert pandas datetime to numpy float timestamps efficiently
-        dates_np = data["Date"].dt.strftime("%Y%m%d").astype(int).to_numpy()
+        start_date = data["Date"].iloc[0]
+        dates_np = (data["Date"] - start_date).dt.days.to_numpy()
         closes_np = data["Close"].to_numpy().flatten()
         print(f"Downloaded data for {symbol}:")
         print(data.head())
@@ -83,7 +84,7 @@ def main():
     )
 
     model = StockPricePredictor(num_stocks=len(stock_to_idx))
-    optimizer = optim.Adam(model.parameters(), lr=0.001)
+    optimizer = optim.Adam(model.parameters(), lr=0.1)
     criterion = nn.MSELoss()
 
     train_losses, val_losses = [], []
@@ -114,20 +115,28 @@ def main():
             f"Epoch {epoch+1}: Train Loss={loss.item():.4f}, Val Loss={val_loss.item():.4f}"
         )
 
-    plt.plot(train_losses, label="Train Loss")
-    plt.plot(val_losses, label="Val Loss")
-    # plt.legend()
-    # plt.show()
+    # Plot predictions vs real prices for AAPL
+    aapl_idx = stock_to_idx["AAPL"]
+    aapl_dates = X[aapl_idx]
+    aapl_prices = y[aapl_idx]
 
-    # Example prediction
-    stock_id = torch.tensor([stock_to_idx["AAPL"]], dtype=torch.long)
-    date_to_lookup = 20101212
-    date_norm = scaler.transform(np.array([[date_to_lookup]]))
-    date = torch.tensor(date_norm.reshape(-1, 1), dtype=torch.float32)
+    # Normalize dates
+    aapl_dates_norm = scaler.transform(aapl_dates.reshape(-1, 1)).flatten()
+    stock_ids_tensor = torch.tensor([aapl_idx] * len(aapl_dates_norm), dtype=torch.long)
+    dates_tensor = torch.tensor(aapl_dates_norm, dtype=torch.float32)
+
     model.eval()
     with torch.no_grad():
-        pred = model(stock_id, date)
-    print(f"Predicted Price for AAPL on {date_to_lookup}: ${pred.item():.2f}")
+        preds = model(stock_ids_tensor, dates_tensor).squeeze(-1).numpy()
+
+    plt.figure(figsize=(12, 6))
+    plt.plot(aapl_dates, aapl_prices, label="Actual Price")
+    plt.plot(aapl_dates, preds, label="Predicted Price")
+    plt.xlabel(f"Days since {start}")
+    plt.ylabel("Price")
+    plt.title("AAPL: Actual vs Predicted Prices")
+    plt.legend()
+    plt.show()
 
 
 if __name__ == "__main__":
